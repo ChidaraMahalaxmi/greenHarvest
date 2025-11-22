@@ -1,40 +1,51 @@
-// backend/src/controllers/product.controller.js
 import Product from "../models/Product.js";
 
+// CREATE PRODUCT (Only Farmer)
 export const createProduct = async (req, res) => {
   try {
-    const farmerId = req.user.id;
-    const { name, description, category, price, stock, images } = req.body;
+    const { name, category, description, price, quantity, image } = req.body;
+
     const product = await Product.create({
-      farmer: farmerId,
+      farmer: req.user._id, // farmer from token
       name,
-      description,
       category,
+      description,
       price,
-      stock,
-      images
+      quantity,
+      image, // optional (Cloudinary later)
     });
-    res.status(201).json(product);
+
+    res.status(201).json({
+      message: "Product created successfully",
+      product,
+    });
   } catch (err) {
-    res.status(500).json({ message: "Create product failed", error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
+// GET ALL PRODUCTS
 export const listProducts = async (req, res) => {
   try {
-    const products = await Product.find({ adminVerified: true }).populate("farmer", "name");
+    const products = await Product.find().populate("farmer", "name email");
     res.json(products);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
+// GET SINGLE PRODUCT
 export const getProduct = async (req, res) => {
   try {
-    const p = await Product.findById(req.params.id).populate("farmer", "name");
-    if (!p) return res.status(404).json({ message: "Product not found" });
-    res.json(p);
+    const product = await Product.findById(req.params.id).populate(
+      "farmer",
+      "name email"
+    );
+
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    res.json(product);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };

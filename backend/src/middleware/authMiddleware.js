@@ -22,3 +22,14 @@ export const protect = async (req, res, next) => {
     return res.status(401).json({ message: "Not authorized, token missing" });
   }
 };
+export const restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: "You are not allowed to perform this action",
+      });
+    }
+    next();
+  };
+};
+
