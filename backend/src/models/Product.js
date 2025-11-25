@@ -4,7 +4,7 @@ const productSchema = new mongoose.Schema(
   {
     farmer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Farmer",
+      ref: "User",
       required: true,
     },
     name: { type: String, required: true },

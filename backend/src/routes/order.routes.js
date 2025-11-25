@@ -5,29 +5,54 @@ import {
   getOrder,
   updatePaymentMethod,
   cancelOrder,
-  updateOrderAddress
+  updateOrderAddress,
+  farmerUpdateOrderStatus,
+  adminGetAllOrders,
+  adminUpdateOrderStatus,
+  adminApproveRefund,
+  agentGetAssignedOrders,
+  agentUpdateOrderStatus,
 } from "../controllers/order.controller.js";
 
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, restrictTo } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// CREATE ORDER
+/* ------------------------------------------
+   ADMIN ROUTES
+-------------------------------------------*/
+router.get("/", protect, restrictTo("admin"), adminGetAllOrders);
+router.patch("/:orderId/status", protect, restrictTo("admin"), adminUpdateOrderStatus);
+router.patch("/:orderId/refund/approve", protect, restrictTo("admin"), adminApproveRefund);
+
+/* ------------------------------------------
+   AGENT ROUTES
+-------------------------------------------*/
+router.get("/agent/my-orders", protect, restrictTo("agent"), agentGetAssignedOrders);
+router.patch("/agent/:orderId/status", protect, restrictTo("agent"), agentUpdateOrderStatus);
+
+/* ------------------------------------------
+   FARMER ROUTES
+-------------------------------------------*/
+router.patch(
+  "/farmer/:orderId/status",
+  protect,
+  restrictTo("farmer"),
+  farmerUpdateOrderStatus
+);
+
+/* ------------------------------------------
+   USER ROUTES
+-------------------------------------------*/
 router.post("/", protect, createOrder);
-
-// GET ALL ORDERS OF LOGGED-IN USER
 router.get("/my-orders", protect, myOrders);
-
-// GET A SINGLE ORDER
-router.get("/:id", protect, getOrder);
-
-// Update payment method
 router.patch("/:orderId/payment-method", protect, updatePaymentMethod);
-
-// Cancel order
 router.patch("/:orderId/cancel", protect, cancelOrder);
-
-// Update delivery address
 router.patch("/:orderId/address", protect, updateOrderAddress);
+
+/* ------------------------------------------
+   GET SINGLE ORDER — (place LAST)
+-------------------------------------------*/
+router.get("/:id", protect, getOrder);
 
 export default router;

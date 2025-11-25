@@ -1,15 +1,14 @@
-// backend/src/models/Certificate.js
 import mongoose from "mongoose";
 
-const certificateSchema = new mongoose.Schema({
+const certSchema = new mongoose.Schema({
   farmer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   fileUrl: { type: String, required: true },
-  publicId: String,
+  publicId: String, // if using cloudinary
   status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
-  uploadedAt: { type: Date, default: Date.now },
   reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   reviewedAt: Date,
   notes: String
-});
+}, { timestamps: true });
 
-export default mongoose.model("Certificate", certificateSchema);
+const Certificate = mongoose.model("Certificate", certSchema);
+export default Certificate;

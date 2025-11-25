@@ -1,0 +1,128 @@
+{
+  "id": null,
+  "uid": "greenharvest-dashboard",
+  "title": "GreenHarvest Monitoring Dashboard",
+  "tags": ["greenharvest", "monitoring", "prometheus"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Orders",
+      "id": 1,
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "order_count",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center"
+      },
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 }
+    },
+    {
+      "type": "gauge",
+      "title": "Total Order Value (₹)",
+      "id": 2,
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "order_value",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      },
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 }
+    },
+    {
+      "type": "graph",
+      "title": "Order Rate (Orders / min)",
+      "id": 3,
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(order_count[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 5 }
+    },
+    {
+      "type": "stat",
+      "title": "API Response Time (ms)",
+      "id": 4,
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "nodejs_http_request_duration_ms",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 9, "w": 6, "h": 4 }
+    },
+    {
+      "type": "table",
+      "title": "Low Stock Products (<10)",
+      "id": 5,
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "inventory_low_stock",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 6, "y": 9, "w": 6, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Node.js CPU Usage",
+      "id": 6,
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "process_cpu_user_seconds_total",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value"
+      },
+      "gridPos": { "x": 0, "y": 13, "w": 6, "h": 4 }
+    },
+    {
+      "type": "stat",
+      "title": "Node.js Memory (MB)",
+      "id": 7,
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes / 1024 / 1024",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 6, "y": 13, "w": 6, "h": 4 }
+    },
+    {
+      "type": "stat",
+      "title": "Server Uptime (Seconds)",
+      "id": 8,
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "process_uptime_seconds",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 17, "w": 12, "h": 4 }
+    }
+  ]
+}

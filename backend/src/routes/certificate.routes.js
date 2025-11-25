@@ -1,12 +1,15 @@
-// backend/src/routes/certificate.routes.js
 import express from "express";
+import multer from "multer";
 import { uploadCertificate, listPending, reviewCertificate } from "../controllers/certificate.controller.js";
 import { protect, restrictTo } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+const upload = multer({ dest: "uploads/certificates/" });
 
-router.post("/upload", protect, restrictTo("farmer"), uploadCertificate);
+router.post("/upload", protect, restrictTo("farmer"), upload.single("certificate"), uploadCertificate);
+
+// admin endpoints
 router.get("/pending", protect, restrictTo("admin"), listPending);
-router.patch("/:id/review", protect, restrictTo("admin"), reviewCertificate);
+router.patch("/review/:id", protect, restrictTo("admin"), reviewCertificate);
 
 export default router;
