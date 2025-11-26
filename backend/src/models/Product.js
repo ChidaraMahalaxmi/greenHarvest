@@ -12,7 +12,12 @@ const productSchema = new mongoose.Schema(
     description: String,
     price: { type: Number, required: true },
     quantity: { type: Number, required: true },
-    image: String
+    image: String,
+
+    // === NEW FIELDS ===
+    lowStockAlertSent: { type: Boolean, default: false },
+    outOfStockAlertSent: { type: Boolean, default: false },
+    restockedAlertSent: { type: Boolean, default: false }, // <--- NEW
   },
   { timestamps: true }
 );

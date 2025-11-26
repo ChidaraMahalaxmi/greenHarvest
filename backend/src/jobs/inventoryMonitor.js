@@ -1,26 +1,73 @@
 import Product from "../models/Product.js";
-import { sendLowStockEmail } from "../utils/email.js";
+import User from "../models/User.js";
+import {
+  sendLowStockEmail,
+  sendRestockedEmail,
+} from "../utils/email.js";
 
 export default async function inventoryMonitor() {
   try {
     console.log("Inventory Monitor Running...");
 
-    // find products with low stock (< 10)
-    const lowStockProducts = await Product.find({ quantity: { $lt: 10 } });
+    const products = await Product.find();
 
-    if (lowStockProducts.length > 0) {
-      for (const product of lowStockProducts) {
-        console.log("Low stock alert:", product.name);
+    for (const product of products) {
+      const threshold = 10;
+      const farmer = await User.findById(product.farmer);
+      const farmerEmail = farmer?.email || process.env.ADMIN_EMAIL;
 
-        // notify farmer
-        try {
-          await sendLowStockEmail(
-            product.farmer,
+      /* ------------------------------
+         1. LOW STOCK ALERT (< 10)
+      -------------------------------*/
+      if (product.quantity > 0 && product.quantity < threshold) {
+        if (!product.lowStockAlertSent) {
+          console.log("Low stock alert:", product.name);
+          await sendLowStockEmail(farmerEmail, product.name, product.quantity);
+
+          product.lowStockAlertSent = true;
+          product.outOfStockAlertSent = false;
+          product.restockedAlertSent = false;
+          await product.save();
+        }
+      }
+
+      /* ------------------------------
+         2. OUT OF STOCK ALERT (== 0)
+      -------------------------------*/
+      if (product.quantity === 0) {
+        if (!product.outOfStockAlertSent) {
+          console.log("Out of stock alert:", product.name);
+          await sendLowStockEmail(farmerEmail, product.name, 0);
+
+          product.outOfStockAlertSent = true;
+          product.lowStockAlertSent = true;
+          product.restockedAlertSent = false;
+          await product.save();
+        }
+      }
+
+      /* ------------------------------
+         3. RESTOCKED (> threshold)
+      -------------------------------*/
+      if (product.quantity >= threshold) {
+        if (
+          (product.lowStockAlertSent || product.outOfStockAlertSent) &&
+          !product.restockedAlertSent
+        ) {
+          console.log("Restocked alert:", product.name);
+          await sendRestockedEmail(
+            farmerEmail,
             product.name,
             product.quantity
           );
-        } catch (emailErr) {
-          console.error("Email send error:", emailErr);
+
+          product.restockedAlertSent = true;
+
+          // reset low-stock alerts for next cycle
+          product.lowStockAlertSent = false;
+          product.outOfStockAlertSent = false;
+
+          await product.save();
         }
       }
     }

@@ -26,28 +26,43 @@ export const createOrder = async (req, res) => {
     const persistedItems = [];
 
     for (const item of items) {
-      if (!item.product || !item.quantity || item.quantity <= 0) {
-        return res.status(400).json({ message: "Each item must include a valid product and positive quantity" });
-      }
+  if (!item.product || !item.quantity || item.quantity <= 0) {
+    return res.status(400).json({ message: "Each item must include a valid product and positive quantity" });
+  }
 
-      const updatedProduct = await Product.findOneAndUpdate(
-        { _id: item.product, quantity: { $gte: item.quantity } },
-        { $inc: { quantity: -item.quantity } },
-        { new: true }
-      );
+  // ---- REDIS LOCK HERE ----
+  const lockKey = `lock:product:${item.product}`;
+  const token = await acquireLock(lockKey, Number(process.env.INVENTORY_LOCK_TIMEOUT) || 30000);
 
-      if (!updatedProduct) {
-        return res.status(400).json({ message: `Not enough stock for product ${item.product}` });
-      }
+  if (!token) {
+    return res.status(423).json({
+      message: `Resource busy, try again for product ${item.product}`
+    });
+  }
 
-      const priceAtPurchase = updatedProduct.price;
-      totalAmount += priceAtPurchase * item.quantity;
-      persistedItems.push({
-        product: item.product,
-        quantity: item.quantity,
-        priceAtPurchase,
-      });
+  try {
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: item.product, quantity: { $gte: item.quantity } },
+      { $inc: { quantity: -item.quantity } },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(400).json({ message: `Not enough stock for product ${item.product}` });
     }
+
+    const priceAtPurchase = updatedProduct.price;
+    totalAmount += priceAtPurchase * item.quantity;
+    persistedItems.push({
+      product: item.product,
+      quantity: item.quantity,
+      priceAtPurchase,
+    });
+  } finally {
+    await releaseLock(lockKey, token);
+  }
+}
+
 
     const order = await Order.create({
       user: req.user._id,
