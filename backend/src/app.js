@@ -8,6 +8,9 @@ import adminRoutes from "./routes/admin.routes.js";
 import certificateRoutes from "./routes/certificate.routes.js";
 
 import register from "./metrics/prometheus.js";
+import farmerRoutes from "./routes/farmer.routes.js";
+import farmerAnalyticsRoutes from "./routes/farmerAnalytics.routes.js";
+
 
 const app = express();
 
@@ -32,5 +35,8 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/agents", deliveryAgentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/certificates", certificateRoutes);
+app.use("/api/farmer", farmerRoutes);
+app.use("/api/farmer", farmerAnalyticsRoutes);
+
 
 export default app;

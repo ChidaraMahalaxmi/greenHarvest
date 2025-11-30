@@ -405,3 +405,17 @@ export const updateOrderAddress = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+export const farmerGetOrders = async (req, res) => {
+  try {
+    // find products owned by farmer
+    const farmerProducts = await Product.find({ farmer: req.user.id }).select("_id");
+    const ids = farmerProducts.map(p => p._id);
+
+    // find orders that contain those product ids (adjust based on your order schema)
+    // Example: assume order.items is array [{ product: ObjectId, qty: Number }]
+    const orders = await Order.find({ "items.product": { $in: ids } }).populate("customer").populate("items.product");
+    return res.json({ orders });
+  } catch (err) {
+    return res.status(500).json({ message: "Error", error: err.message });
+  }
+};
